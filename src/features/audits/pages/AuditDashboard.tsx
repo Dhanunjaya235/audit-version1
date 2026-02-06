@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Calendar, Users, ChevronRight } from 'lucide-react';
 import { useAudits, useProjects } from '../api';
 import {
@@ -14,7 +14,21 @@ import { canCreateAudit } from '../utils';
 
 export const AuditDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const [filters, setFilters] = useState<AuditFilters>({});
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [filters, setFilters] = useState<AuditFilters>(() => {
+        // Initialize filters from URL query params
+        const projectId = searchParams.get('project');
+        return projectId ? { projectId } : {};
+    });
+
+    // Update URL when filters change
+    useEffect(() => {
+        const newParams = new URLSearchParams();
+        if (filters.projectId) {
+            newParams.set('project', filters.projectId);
+        }
+        setSearchParams(newParams, { replace: true });
+    }, [filters.projectId, setSearchParams]);
 
     const { data: audits, loading: auditsLoading, error: auditsError } = useAudits(filters);
     const { data: projects, loading: projectsLoading } = useProjects();

@@ -12,6 +12,7 @@ import {
     AlertCircle,
     X,
     Loader2,
+    ExternalLink,
 } from 'lucide-react';
 
 // Mock data for projects
@@ -61,6 +62,9 @@ const mockProjectsData: ProjectDetail[] = [
         audits: [
             { id: 'audit-1', auditDate: '2026-02-15', status: 'In Progress', score: 72, templateName: 'Enterprise Software Audit' },
             { id: 'audit-6', auditDate: '2026-01-15', status: 'Completed', score: 45, templateName: 'Security & Compliance Review' },
+            { id: 'audit-8', auditDate: '2025-11-20', status: 'Closed', score: 68, templateName: 'Enterprise Software Audit' },
+            { id: 'audit-9', auditDate: '2025-09-10', status: 'Closed', score: 78, templateName: 'Agile Delivery Assessment' },
+            { id: 'audit-10', auditDate: '2025-06-05', status: 'Closed', score: 52, templateName: 'Security & Compliance Review' },
         ],
     },
     {
@@ -81,6 +85,8 @@ const mockProjectsData: ProjectDetail[] = [
         audits: [
             { id: 'audit-2', auditDate: '2026-02-10', status: 'Completed', score: 85, templateName: 'Enterprise Software Audit' },
             { id: 'audit-7', auditDate: '2026-02-08', status: 'In Progress', score: 58, templateName: 'Security & Compliance Review' },
+            { id: 'audit-11', auditDate: '2025-12-15', status: 'Closed', score: 82, templateName: 'Agile Delivery Assessment' },
+            { id: 'audit-12', auditDate: '2025-08-22', status: 'Closed', score: 71, templateName: 'Enterprise Software Audit' },
         ],
     },
     {
@@ -96,10 +102,12 @@ const mockProjectsData: ProjectDetail[] = [
         deliveryLead: 'Emily Thompson',
         templateId: 'tmpl-2',
         templateName: 'Agile Delivery Assessment',
-        lastAuditDate: null,
-        lastAuditScore: null,
+        lastAuditDate: '2025-12-01',
+        lastAuditScore: 76,
         audits: [
             { id: 'audit-3', auditDate: '2026-02-20', status: 'Scheduled', score: null, templateName: 'Agile Delivery Assessment' },
+            { id: 'audit-13', auditDate: '2025-12-01', status: 'Completed', score: 76, templateName: 'Enterprise Software Audit' },
+            { id: 'audit-14', auditDate: '2025-10-15', status: 'Closed', score: 64, templateName: 'Security & Compliance Review' },
         ],
     },
     {
@@ -119,6 +127,7 @@ const mockProjectsData: ProjectDetail[] = [
         lastAuditScore: 91,
         audits: [
             { id: 'audit-4', auditDate: '2026-01-28', status: 'Closed', score: 91, templateName: 'Agile Delivery Assessment' },
+            { id: 'audit-15', auditDate: '2025-11-05', status: 'Completed', score: 88, templateName: 'Enterprise Software Audit' },
         ],
     },
     {
@@ -231,6 +240,10 @@ export const ProjectsPage: React.FC = () => {
         }
     };
 
+    const handleViewAllAudits = (projectId: string) => {
+        navigate(`/audits?project=${projectId}`);
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 p-6">
@@ -310,6 +323,7 @@ export const ProjectsPage: React.FC = () => {
                                 project={project}
                                 onScheduleAudit={() => handleScheduleAudit(project)}
                                 onViewAudit={handleViewAudit}
+                                onViewAllAudits={handleViewAllAudits}
                                 getStatusColor={getStatusColor}
                                 getScoreColor={getScoreColor}
                                 getAuditStatusColor={getAuditStatusColor}
@@ -340,6 +354,7 @@ interface ProjectCardProps {
     project: ProjectDetail;
     onScheduleAudit: () => void;
     onViewAudit: (auditId: string, status: string) => void;
+    onViewAllAudits: (projectId: string) => void;
     getStatusColor: (status: string) => string;
     getScoreColor: (score: number | null) => string;
     getAuditStatusColor: (status: string) => string;
@@ -350,12 +365,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     project,
     onScheduleAudit,
     onViewAudit,
+    onViewAllAudits,
     getStatusColor,
     getScoreColor,
     getAuditStatusColor,
     formatDate,
 }) => {
     const hasActiveAudit = project.audits.some(a => a.status === 'In Progress' || a.status === 'Scheduled');
+    const maxDisplayedAudits = 2;
+    const hasMoreAudits = project.audits.length > maxDisplayedAudits;
 
     return (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
@@ -409,23 +427,36 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                     <div className="flex items-center gap-2">
                         <ClipboardCheck size={14} className="text-slate-400" />
                         <span className="text-sm font-medium text-slate-700">Audits</span>
-                        <span className="text-xs text-slate-400">({project.audits.length})</span>
+                        <span className="text-xs bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full font-medium">
+                            {project.audits.length}
+                        </span>
                     </div>
-                    <button
-                        onClick={onScheduleAudit}
-                        disabled={hasActiveAudit}
-                        className={`
-                            flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg
-                            transition-all duration-200
-                            ${hasActiveAudit
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : 'bg-primary text-white hover:bg-primary-dark hover:shadow-md'
-                            }
-                        `}
-                    >
-                        <Plus size={12} />
-                        Schedule Audit
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {hasMoreAudits && (
+                            <button
+                                onClick={() => onViewAllAudits(project.id)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                            >
+                                <ExternalLink size={12} />
+                                View All
+                            </button>
+                        )}
+                        <button
+                            onClick={onScheduleAudit}
+                            disabled={hasActiveAudit}
+                            className={`
+                                flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg
+                                transition-all duration-200
+                                ${hasActiveAudit
+                                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    : 'bg-primary text-white hover:bg-primary-dark hover:shadow-md'
+                                }
+                            `}
+                        >
+                            <Plus size={12} />
+                            Schedule Audit
+                        </button>
+                    </div>
                 </div>
 
                 {project.audits.length === 0 ? (
@@ -435,7 +466,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {project.audits.slice(0, 3).map(audit => (
+                        {project.audits.slice(0, maxDisplayedAudits).map(audit => (
                             <div
                                 key={audit.id}
                                 onClick={() => onViewAudit(audit.id, audit.status)}

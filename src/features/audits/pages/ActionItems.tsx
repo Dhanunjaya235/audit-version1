@@ -77,7 +77,7 @@ export const ActionItems: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="max-w-6xl mx-auto px-6 py-4">
+            <div className="max-w-8xl mx-auto px-6 py-4">
                 <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-slate-500">Filter by:</span>
 
@@ -124,7 +124,7 @@ export const ActionItems: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="max-w-6xl mx-auto px-6 py-4 pb-12">
+            <div className="max-w-8xl mx-auto px-6 py-4 pb-12">
                 {loading ? (
                     <div className="space-y-3">
                         {[1, 2, 3].map((i) => (

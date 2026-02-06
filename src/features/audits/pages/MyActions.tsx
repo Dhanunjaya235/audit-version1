@@ -77,7 +77,7 @@ export const MyActions: React.FC = () => {
                         <NoActionsState />
                     </div>
                 ) : (
-                    <div className="space-y-8">
+                    <div className="space-y-12">
                         {/* Open Actions */}
                         {groupedActions.open.length > 0 && (
                             <ActionSection
