@@ -3,7 +3,8 @@ import { NavLink } from 'react-router-dom';
 import {
     UserCheck,
     Handshake,
-    ListTodo
+    ListTodo,
+    CheckSquare
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -26,6 +27,12 @@ const Sidebar: React.FC = () => {
             name: 'Audits',
             path: '/audits',
             icon: ListTodo,
+            display: true
+        },
+        {
+            name: 'My Actions',
+            path: '/my-actions',
+            icon: CheckSquare,
             display: true
         }
     ];
