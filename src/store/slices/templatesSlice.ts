@@ -324,6 +324,70 @@ const templatesSlice = createSlice({
                 }
             }
         },
+
+        // Question Option CRUD
+        addQuestionOption: (state, action: PayloadAction<{ templateId: string; areaId: string; scopeId: string; questionId: string; label: string; value: number }>) => {
+            const template = state.templates.find(t => t.id === action.payload.templateId);
+            if (template) {
+                const area = template.auditAreas.find(a => a.id === action.payload.areaId);
+                if (area) {
+                    const scope = area.scopes.find(s => s.id === action.payload.scopeId);
+                    if (scope) {
+                        const question = scope.questions.find(q => q.id === action.payload.questionId);
+                        if (question) {
+                            if (!question.options) {
+                                question.options = [];
+                            }
+                            const newOption = {
+                                id: generateId(),
+                                label: action.payload.label,
+                                value: action.payload.value,
+                            };
+                            question.options.push(newOption);
+                            template.updatedAt = new Date().toISOString();
+                        }
+                    }
+                }
+            }
+        },
+
+        updateQuestionOption: (state, action: PayloadAction<{ templateId: string; areaId: string; scopeId: string; questionId: string; optionId: string; label?: string; value?: number }>) => {
+            const template = state.templates.find(t => t.id === action.payload.templateId);
+            if (template) {
+                const area = template.auditAreas.find(a => a.id === action.payload.areaId);
+                if (area) {
+                    const scope = area.scopes.find(s => s.id === action.payload.scopeId);
+                    if (scope) {
+                        const question = scope.questions.find(q => q.id === action.payload.questionId);
+                        if (question && question.options) {
+                            const option = question.options.find(o => o.id === action.payload.optionId);
+                            if (option) {
+                                if (action.payload.label !== undefined) option.label = action.payload.label;
+                                if (action.payload.value !== undefined) option.value = action.payload.value;
+                                template.updatedAt = new Date().toISOString();
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        deleteQuestionOption: (state, action: PayloadAction<{ templateId: string; areaId: string; scopeId: string; questionId: string; optionId: string }>) => {
+            const template = state.templates.find(t => t.id === action.payload.templateId);
+            if (template) {
+                const area = template.auditAreas.find(a => a.id === action.payload.areaId);
+                if (area) {
+                    const scope = area.scopes.find(s => s.id === action.payload.scopeId);
+                    if (scope) {
+                        const question = scope.questions.find(q => q.id === action.payload.questionId);
+                        if (question && question.options) {
+                            question.options = question.options.filter(o => o.id !== action.payload.optionId);
+                            template.updatedAt = new Date().toISOString();
+                        }
+                    }
+                }
+            }
+        },
     },
 });
 
@@ -342,6 +406,9 @@ export const {
     addQuestion,
     updateQuestion,
     deleteQuestion,
+    addQuestionOption,
+    updateQuestionOption,
+    deleteQuestionOption,
 } = templatesSlice.actions;
 
 export default templatesSlice.reducer;

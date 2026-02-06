@@ -1,9 +1,17 @@
+// Question Option interface for rating options
+export interface QuestionOption {
+    id: string;
+    label: string;
+    value: number; // Numerical value for rating calculation
+}
+
 // Question interface
 export interface Question {
     id: string;
     scopeId: string;
     text: string;
     percentage: number;
+    options?: QuestionOption[]; // Optional answer options with numerical values
 }
 
 // Scope interface
