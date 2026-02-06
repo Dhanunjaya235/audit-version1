@@ -17,17 +17,10 @@ import {
 function Routing() {
     return (
         <Routes>
-            {/* Default redirect to Projects */}
             <Route path="/" element={<Navigate to="/projects" replace />} />
-
-            {/* Projects - Main entry for triggering audits */}
             <Route path="/projects" element={<ProjectsPage />} />
-
-            {/* Template Management Routes */}
             <Route path="/templates" element={<TemplateStore />} />
             <Route path="/templates/:templateId" element={<TemplateDetail />} />
-
-            {/* Audit Management Routes */}
             <Route path="/audits" element={<AuditDashboard />} />
             <Route path="/audits/new" element={<CreateAudit />} />
             <Route path="/audits/:auditId/preparation" element={<AuditPreparation />} />
@@ -35,7 +28,6 @@ function Routing() {
             <Route path="/audits/:auditId/report" element={<AuditReportView />} />
             <Route path="/audits/:auditId/actions" element={<ActionItems />} />
 
-            {/* My Actions Route */}
             <Route path="/my-actions" element={<MyActions />} />
         </Routes>
     );

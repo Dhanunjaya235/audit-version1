@@ -4,23 +4,18 @@ import {
     UserCheck,
     Handshake,
     ListTodo,
-    CheckSquare
+    CheckSquare,
+    FolderKanban,
+    LayoutTemplate
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
     const [isHovered, setIsHovered] = React.useState(false);
     const menuItems = [
         {
-            name: 'Templates',
-            path: '/templates',
-            icon: UserCheck,
-            display: true
-
-        },
-        {
             name: 'Projects',
             path: '/projects',
-            icon: Handshake,
+            icon: FolderKanban,
             display: true
         },
         {
@@ -28,6 +23,13 @@ const Sidebar: React.FC = () => {
             path: '/audits',
             icon: ListTodo,
             display: true
+        },
+        {
+            name: 'Templates',
+            path: '/templates',
+            icon: LayoutTemplate,
+            display: true
+
         },
         {
             name: 'My Actions',
@@ -40,12 +42,10 @@ const Sidebar: React.FC = () => {
 
     return (
         <div
-            className={`bg-[#394253] text-white min-h-screen flex flex-col transition-all duration-300 ease-in-out ${isHovered ? 'w-64' : 'w-16'
-                }`}
+            className={`bg-[#245269] text-white min-h-screen flex flex-col transition-[width] duration-300 ease-in-out will-change-[width] ${isHovered ? 'w-64' : 'w-16'}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Navigation */}
             <nav className="flex-1 px-2 py-8">
                 <ul className="space-y-2">
                     {menuItems.filter((item) => item.display).map((item) => {
@@ -55,17 +55,24 @@ const Sidebar: React.FC = () => {
                                 <NavLink
                                     to={item.path}
                                     className={({ isActive }) =>
-                                        `flex items-center px-3 py-3 rounded-lg transition-all duration-200 ${isActive
-                                            ? 'bg-white text-[#394253]'
+                                        `flex items-center px-3 py-3 rounded-lg transition-colors duration-200 ${isActive
+                                            ? 'bg-white text-[#245269]'
                                             : 'text-white/80 hover:bg-white/10 hover:text-white'
                                         }`
                                     }
                                     title={!isHovered ? item.name : ''}
                                 >
-                                    <Icon className="w-5 h-5 flex-shrink-0" />
-                                    {isHovered && (
-                                        <span className="ml-3">{item.name}</span>
-                                    )}
+                                    <div className="w-6 flex justify-center">
+                                        <Icon className="w-5 h-5 flex-shrink-0" />
+                                    </div>
+                                    <span
+                                        className={`ml-3 whitespace-nowrap transition-all duration-200 ${isHovered
+                                            ? 'opacity-100 translate-x-0'
+                                            : 'opacity-0 -translate-x-2 pointer-events-none'
+                                            }`}
+                                    >
+                                        {item.name}
+                                    </span>
                                 </NavLink>
                             </li>
                         );

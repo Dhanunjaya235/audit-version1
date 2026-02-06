@@ -43,7 +43,7 @@ export const AuditDashboard: React.FC = () => {
         <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <div className="bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-6 py-6">
+                <div className="max-w-8xl mx-auto px-6 py-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900">Audits</h1>
@@ -70,7 +70,7 @@ export const AuditDashboard: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="max-w-8xl mx-auto px-6 py-6">
                 {/* Filter Bar */}
                 <FilterBar
                     filters={filters}

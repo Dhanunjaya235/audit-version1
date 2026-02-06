@@ -41,7 +41,7 @@ export const ActionItems: React.FC = () => {
         <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <div className="bg-white border-b border-slate-200">
-                <div className="max-w-6xl mx-auto px-6 py-6">
+                <div className="max-w-8xl mx-auto px-6 py-6">
                     <button
                         onClick={() => navigate(`/audits/${auditId}/report`)}
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-4 transition-colors"

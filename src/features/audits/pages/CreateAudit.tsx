@@ -71,7 +71,7 @@ export const CreateAudit: React.FC = () => {
         <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <div className="bg-white border-b border-slate-200">
-                <div className="max-w-3xl mx-auto px-6 py-6">
+                <div className="max-w-8xl mx-auto px-6 py-6">
                     <button
                         onClick={() => navigate('/audits')}
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-4 transition-colors"

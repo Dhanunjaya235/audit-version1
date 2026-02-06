@@ -52,7 +52,7 @@ export const AuditPreparation: React.FC = () => {
                         <Skeleton className="h-5 w-96" />
                     </div>
                 </div>
-                <div className="max-w-5xl mx-auto px-6 py-8 space-y-4">
+                <div className="max-w-8xl mx-auto px-6 py-8 space-y-4">
                     {[1, 2, 3].map((i) => (
                         <div key={i} className="bg-white rounded-xl border border-slate-200 p-6">
                             <Skeleton className="h-6 w-48 mb-4" />
@@ -85,7 +85,7 @@ export const AuditPreparation: React.FC = () => {
         <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <div className="bg-white border-b border-slate-200">
-                <div className="max-w-5xl mx-auto px-6 py-6">
+                <div className="max-w-8xl mx-auto px-6 py-6">
                     <button
                         onClick={() => navigate('/audits')}
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-4 transition-colors"
@@ -116,7 +116,7 @@ export const AuditPreparation: React.FC = () => {
             </div>
 
             {/* Info banner */}
-            <div className="max-w-5xl mx-auto px-6 py-4">
+            <div className="max-w-8xl mx-auto px-6 py-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-4">
                     <BookOpen size={24} className="text-blue-500 flex-shrink-0 mt-0.5" />
                     <div>
@@ -130,7 +130,7 @@ export const AuditPreparation: React.FC = () => {
             </div>
 
             {/* Content - Areas, Scopes, Questions */}
-            <div className="max-w-5xl mx-auto px-6 py-4 pb-12">
+            <div className="max-w-8xl mx-auto px-6 py-4 pb-12">
                 <div className="space-y-4">
                     {audit.areas.map((area) => (
                         <AreaAccordion

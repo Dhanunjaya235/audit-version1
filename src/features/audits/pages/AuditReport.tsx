@@ -45,12 +45,12 @@ export const AuditReportView: React.FC = () => {
         return (
             <div className="min-h-screen bg-slate-50">
                 <div className="bg-white border-b border-slate-200">
-                    <div className="max-w-5xl mx-auto px-6 py-6">
+                    <div className="max-w-8xl mx-auto px-6 py-6">
                         <Skeleton className="h-8 w-64 mb-2" />
                         <Skeleton className="h-5 w-96" />
                     </div>
                 </div>
-                <div className="max-w-5xl mx-auto px-6 py-8">
+                <div className="max-w-8xl mx-auto px-6 py-8">
                     <div className="grid grid-cols-3 gap-6 mb-8">
                         <Skeleton className="h-32 rounded-xl" />
                         <Skeleton className="h-32 rounded-xl" />
@@ -81,7 +81,7 @@ export const AuditReportView: React.FC = () => {
         <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <div className="bg-white border-b border-slate-200">
-                <div className="max-w-5xl mx-auto px-6 py-6">
+                <div className="max-w-8xl mx-auto px-6 py-6">
                     <button
                         onClick={() => navigate('/audits')}
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-4 transition-colors"
@@ -181,7 +181,7 @@ export const AuditReportView: React.FC = () => {
             )}
 
             {/* Main Content */}
-            <div className="max-w-5xl mx-auto px-6 py-8">
+            <div className="max-w-8xl mx-auto px-6 py-8">
                 {/* Score Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Overall Score */}
