@@ -4,7 +4,8 @@ import autoprefixer from 'autoprefixer';
 import tailwindcss from 'tailwindcss';
 import { VitePWA } from 'vite-plugin-pwa';
 import tsconfigPaths from 'vite-tsconfig-paths';
-// https://vite.dev/config/
+import { BASENAME } from './src/constants';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -63,5 +64,5 @@ export default defineConfig({
     outDir: 'build',
   },
 
-  base: '/audit/'
+  base: BASENAME
 })

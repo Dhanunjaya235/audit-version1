@@ -12,9 +12,10 @@ import { countAuditAreaQuestions } from '@/utils/calculations';
 interface AuditAreasListProps {
     auditAreas: AuditArea[];
     templateId: string;
+    saving?: boolean;
 }
 
-export const AuditAreasList: React.FC<AuditAreasListProps> = ({ auditAreas, templateId }) => {
+export const AuditAreasList: React.FC<AuditAreasListProps> = ({ auditAreas, templateId, saving }) => {
     const dispatch = useAppDispatch();
     const selectedAuditAreaId = useAppSelector(state => state.auditAreas.selectedAuditAreaId);
     const [showAddArea, setShowAddArea] = useState(false);
@@ -167,6 +168,7 @@ export const AuditAreasList: React.FC<AuditAreasListProps> = ({ auditAreas, temp
                 variant="primary"
                 onClick={() => setShowAddArea(true)}
                 className="w-full flex items-center justify-center gap-2"
+                disabled={saving}
             >
                 <Plus size={18} />
                 Add Audit Area

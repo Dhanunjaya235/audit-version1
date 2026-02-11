@@ -45,6 +45,7 @@ export interface TemplatesState {
     templates: Template[];
     selectedTemplateId: string | null;
     loading: boolean;
+    saving: boolean;
     error: string | null;
 }
 

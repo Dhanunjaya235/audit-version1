@@ -1,160 +1,172 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Template, TemplatesState } from '@/types/audit.types';
 import { generateId, calculateAuditAreaWeightage } from '@/utils/calculations';
+import { templateApi, isNewId } from '@/services/templateApi';
 
-// Mock initial data
-const mockTemplates: Template[] = [
-    {
-        id: '1',
-        name: 'Financial Audit Template',
-        createdAt: '2026-01-15T10:00:00Z',
-        updatedAt: '2026-01-15T10:00:00Z',
-        auditAreas: [
-            {
-                id: 'aa1',
-                templateId: '1',
-                name: 'Revenue Recognition',
-                weightage: 40,
-                scopes: [
-                    {
-                        id: 's1',
-                        auditAreaId: 'aa1',
-                        name: 'Sales Transactions',
-                        questions: [
-                            { id: 'q1', scopeId: 's1', text: 'Are sales properly documented?', percentage: 15 },
-                            { id: 'q2', scopeId: 's1', text: 'Is revenue recognized in correct period?', percentage: 25 },
-                        ],
-                    },
-                ],
-            },
-            {
-                id: 'aa2',
-                templateId: '1',
-                name: 'Internal Controls',
-                weightage: 35,
-                scopes: [
-                    {
-                        id: 's2',
-                        auditAreaId: 'aa2',
-                        name: 'Access Controls',
-                        questions: [
-                            { id: 'q3', scopeId: 's2', text: 'Are access rights properly managed?', percentage: 20 },
-                            { id: 'q4', scopeId: 's2', text: 'Is segregation of duties maintained?', percentage: 15 },
-                        ],
-                    },
-                ],
-            },
-            {
-                id: 'aa3',
-                templateId: '1',
-                name: 'Compliance',
-                weightage: 25,
-                scopes: [
-                    {
-                        id: 's3',
-                        auditAreaId: 'aa3',
-                        name: 'Regulatory Requirements',
-                        questions: [
-                            { id: 'q5', scopeId: 's3', text: 'Are all regulations followed?', percentage: 25 },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        id: '2',
-        name: 'IT Security Audit',
-        createdAt: '2026-01-20T14:30:00Z',
-        updatedAt: '2026-01-20T14:30:00Z',
-        auditAreas: [
-            {
-                id: 'aa4',
-                templateId: '2',
-                name: 'Network Security',
-                weightage: 50,
-                scopes: [
-                    {
-                        id: 's4',
-                        auditAreaId: 'aa4',
-                        name: 'Firewall Configuration',
-                        questions: [
-                            { id: 'q6', scopeId: 's4', text: 'Are firewalls properly configured?', percentage: 30 },
-                            { id: 'q7', scopeId: 's4', text: 'Is traffic monitored?', percentage: 20 },
-                        ],
-                    },
-                ],
-            },
-            {
-                id: 'aa5',
-                templateId: '2',
-                name: 'Data Protection',
-                weightage: 50,
-                scopes: [
-                    {
-                        id: 's5',
-                        auditAreaId: 'aa5',
-                        name: 'Encryption',
-                        questions: [
-                            { id: 'q8', scopeId: 's5', text: 'Is data encrypted at rest?', percentage: 25 },
-                            { id: 'q9', scopeId: 's5', text: 'Is data encrypted in transit?', percentage: 25 },
-                        ],
-                    },
-                ],
-            },
-        ],
-    },
-];
+// Async Thunks
+
+export const fetchTemplates = createAsyncThunk(
+    'templates/fetchAll',
+    async (_, { rejectWithValue }) => {
+        try {
+            return await templateApi.getAll();
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to fetch templates');
+        }
+    }
+);
+
+export const fetchTemplateDetail = createAsyncThunk(
+    'templates/fetchDetail',
+    async (id: string, { rejectWithValue }) => {
+        try {
+            if (isNewId(id)) {
+                return rejectWithValue("Cannot fetch detail for draft template");
+            }
+            return await templateApi.getById(id);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to fetch template detail');
+        }
+    }
+);
+
+// Async thunk to create a draft from an existing template (Fetch + Client-side Clone)
+export const createDraftFromExisting = createAsyncThunk(
+    'templates/createDraftFromExisting',
+    async ({ name, baseTemplateId, newId }: { name: string; baseTemplateId: string; newId: string }, { rejectWithValue }) => {
+        try {
+            // First fetch the full source template to ensure we have all nested data
+            const sourceTemplate = await templateApi.getById(baseTemplateId);
+            return { name, sourceTemplate, newId };
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to fetch base template for cloning');
+        }
+    }
+);
+
+export const saveTemplate = createAsyncThunk(
+    'templates/save',
+    async ({ template, originalId }: { template: Template; originalId: string }, { rejectWithValue }) => {
+        try {
+            if (isNewId(template.id)) {
+                // It's a draft, create new on server
+                const created = await templateApi.create(template);
+                return { result: created, originalId };
+            } else {
+                // Update existing
+                const updated = await templateApi.update(template.id, template);
+                return { result: updated, originalId };
+            }
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to save template');
+        }
+    }
+);
+
+export const deleteTemplate = createAsyncThunk(
+    'templates/delete',
+    async (id: string, { rejectWithValue }) => {
+        try {
+            if (!isNewId(id)) {
+                await templateApi.delete(id);
+            }
+            return id;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to delete template');
+        }
+    }
+);
+
+export const cloneTemplate = createAsyncThunk(
+    'templates/clone',
+    async (id: string, { rejectWithValue }) => {
+        try {
+            const source = await templateApi.getById(id);
+            const newName = `${source.name} (Clone)`;
+            return await templateApi.clone(id, newName);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to clone template');
+        }
+    }
+);
+
+const initialState: TemplatesState = {
+    templates: [],
+    selectedTemplateId: null,
+    loading: false,
+    saving: false,
+    error: null,
+};
 
 // Helper function to recalculate audit area weightage from questions
 const recalculateAuditAreaWeightage = (area: Template['auditAreas'][0]) => {
     area.weightage = calculateAuditAreaWeightage(area);
 };
 
-const initialState: TemplatesState = {
-    templates: mockTemplates,
-    selectedTemplateId: null,
-    loading: false,
-    error: null,
+// Helper to deep clone and assign new IDs logic
+const deepCloneWithNewIds = (base: Template, newId: string, newName: string): Template => {
+    return {
+        ...base,
+        id: newId,
+        name: newName,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        // Deep copy areas to ensure we don't mutate original ref
+        auditAreas: (base.auditAreas || []).map((a: any) => {
+            const newAreaId = generateId();
+            return {
+                ...a,
+                id: newAreaId,
+                templateId: newId,
+                scopes: (a.scopes || []).map((s: any) => {
+                    const newScopeId = generateId();
+                    return {
+                        ...s,
+                        id: newScopeId,
+                        auditAreaId: newAreaId,
+                        questions: (s.questions || []).map((q: any) => ({
+                            ...q,
+                            id: generateId(),
+                            scopeId: newScopeId,
+                            options: (q.options || []).map((o: any) => ({
+                                ...o,
+                                id: generateId(),
+                            }))
+                        }))
+                    };
+                })
+            };
+        })
+    };
 };
 
 const templatesSlice = createSlice({
     name: 'templates',
     initialState,
     reducers: {
-        // Template CRUD
-        createTemplate: (state, action: PayloadAction<{ name: string; baseTemplateId?: string }>) => {
-            const { name, baseTemplateId } = action.payload;
-
-            if (baseTemplateId) {
-                // Clone from existing template
-                const baseTemplate = state.templates.find(t => t.id === baseTemplateId);
-                if (baseTemplate) {
-                    const newTemplate: Template = {
-                        ...baseTemplate,
-                        id: generateId(),
-                        name,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    };
-                    state.templates.push(newTemplate);
-                    state.selectedTemplateId = newTemplate.id;
-                }
-            } else {
-                // Create from scratch
-                const newTemplate: Template = {
-                    id: generateId(),
-                    name,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    auditAreas: [],
-                };
-                state.templates.push(newTemplate);
-                state.selectedTemplateId = newTemplate.id;
-            }
+        selectTemplate: (state, action: PayloadAction<string | null>) => {
+            state.selectedTemplateId = action.payload;
         },
 
-        updateTemplate: (state, action: PayloadAction<{ id: string; name: string }>) => {
+        // Synchrounous Draft Creation (From Scratch only)
+        initDraftTemplate: (state, action: PayloadAction<{ name: string; id?: string }>) => {
+            const { name, id } = action.payload;
+            const newId = id || generateId();
+
+            const newTemplate: Template = {
+                id: newId,
+                name,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                auditAreas: [],
+            };
+
+            state.templates.push(newTemplate);
+            state.selectedTemplateId = newTemplate.id;
+        },
+
+        // Local state modifiers (Draft editing)
+        setTemplateName: (state, action: PayloadAction<{ id: string; name: string }>) => {
             const template = state.templates.find(t => t.id === action.payload.id);
             if (template) {
                 template.name = action.payload.name;
@@ -162,37 +174,12 @@ const templatesSlice = createSlice({
             }
         },
 
-        deleteTemplate: (state, action: PayloadAction<string>) => {
-            state.templates = state.templates.filter(t => t.id !== action.payload);
-            if (state.selectedTemplateId === action.payload) {
-                state.selectedTemplateId = null;
-            }
-        },
-
-        cloneTemplate: (state, action: PayloadAction<string>) => {
-            const template = state.templates.find(t => t.id === action.payload);
-            if (template) {
-                const clonedTemplate: Template = {
-                    ...template,
-                    id: generateId(),
-                    name: `${template.name} (Clone)`,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                };
-                state.templates.push(clonedTemplate);
-            }
-        },
-
-        selectTemplate: (state, action: PayloadAction<string | null>) => {
-            state.selectedTemplateId = action.payload;
-        },
-
         // Audit Area CRUD
         addAuditArea: (state, action: PayloadAction<{ templateId: string; name: string }>) => {
             const template = state.templates.find(t => t.id === action.payload.templateId);
             if (template) {
                 const newArea = {
-                    id: generateId(),
+                    id: generateId(), // Temp ID
                     templateId: action.payload.templateId,
                     name: action.payload.name,
                     weightage: 0,
@@ -279,9 +266,16 @@ const templatesSlice = createSlice({
                             scopeId: action.payload.scopeId,
                             text: action.payload.text,
                             percentage: action.payload.percentage,
+                            options: [
+                                { id: generateId(), label: "Level 0", value: 0 },
+                                { id: generateId(), label: "Level 1", value: 1 },
+                                { id: generateId(), label: "Level 2", value: 2 },
+                                { id: generateId(), label: "Level 3", value: 3 },
+                                { id: generateId(), label: "Level 4", value: 4 },
+                                { id: generateId(), label: "Level 5", value: 5 }
+                            ]
                         };
                         scope.questions.push(newQuestion);
-                        // Recalculate audit area weightage
                         recalculateAuditAreaWeightage(area);
                         template.updatedAt = new Date().toISOString();
                     }
@@ -300,7 +294,6 @@ const templatesSlice = createSlice({
                         if (question) {
                             if (action.payload.text !== undefined) question.text = action.payload.text;
                             if (action.payload.percentage !== undefined) question.percentage = action.payload.percentage;
-                            // Recalculate audit area weightage
                             recalculateAuditAreaWeightage(area);
                             template.updatedAt = new Date().toISOString();
                         }
@@ -317,7 +310,6 @@ const templatesSlice = createSlice({
                     const scope = area.scopes.find(s => s.id === action.payload.scopeId);
                     if (scope) {
                         scope.questions = scope.questions.filter(q => q.id !== action.payload.questionId);
-                        // Recalculate audit area weightage
                         recalculateAuditAreaWeightage(area);
                         template.updatedAt = new Date().toISOString();
                     }
@@ -389,14 +381,107 @@ const templatesSlice = createSlice({
             }
         },
     },
+    extraReducers: (builder) => {
+        // Fetch All
+        builder.addCase(fetchTemplates.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(fetchTemplates.fulfilled, (state, action) => {
+            state.loading = false;
+            state.templates = action.payload;
+        });
+        builder.addCase(fetchTemplates.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
+        });
+
+        // Fetch Detail
+        builder.addCase(fetchTemplateDetail.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(fetchTemplateDetail.fulfilled, (state, action) => {
+            state.loading = false;
+            const index = state.templates.findIndex(t => t.id === action.payload.id);
+            if (index !== -1) {
+                state.templates[index] = action.payload;
+            } else {
+                state.templates.push(action.payload);
+            }
+        });
+        builder.addCase(fetchTemplateDetail.rejected, (state, action) => {
+            // Silence error if we just tried to fetch a draft
+            if (action.payload !== "Cannot fetch detail for draft template") {
+                state.loading = false;
+                state.error = action.payload as string;
+            } else {
+                state.loading = false;
+            }
+        });
+
+        // Create Draft From Existing
+        builder.addCase(createDraftFromExisting.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(createDraftFromExisting.fulfilled, (state, action) => {
+            state.loading = false;
+            const { name, sourceTemplate, newId } = action.payload;
+            const newTemplate = deepCloneWithNewIds(sourceTemplate, newId, name);
+            state.templates.push(newTemplate);
+            state.selectedTemplateId = newId;
+        });
+        builder.addCase(createDraftFromExisting.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
+        });
+
+        // Save (Update / Create Real)
+        builder.addCase(saveTemplate.pending, (state) => {
+            state.saving = true;
+            state.error = null;
+        });
+        builder.addCase(saveTemplate.fulfilled, (state, action) => {
+            state.saving = false;
+            const { result, originalId } = action.payload;
+
+            // Find by original ID (which might be temp) and replace
+            const index = state.templates.findIndex(t => t.id === originalId);
+            if (index !== -1) {
+                state.templates[index] = result;
+                // Update selected ID if needed
+                if (state.selectedTemplateId === originalId) {
+                    state.selectedTemplateId = result.id;
+                }
+            } else {
+                state.templates.push(result);
+            }
+        });
+        builder.addCase(saveTemplate.rejected, (state, action) => {
+            state.saving = false;
+            state.error = action.payload as string;
+        });
+
+        // Delete
+        builder.addCase(deleteTemplate.fulfilled, (state, action) => {
+            state.templates = state.templates.filter(t => t.id !== action.payload);
+            if (state.selectedTemplateId === action.payload) {
+                state.selectedTemplateId = null;
+            }
+        });
+
+        // Clone (Server-side)
+        builder.addCase(cloneTemplate.fulfilled, (state, action) => {
+            state.templates.push(action.payload);
+        });
+    },
 });
 
 export const {
-    createTemplate,
-    updateTemplate,
-    deleteTemplate,
-    cloneTemplate,
     selectTemplate,
+    initDraftTemplate,
+    setTemplateName,
     addAuditArea,
     updateAuditArea,
     deleteAuditArea,

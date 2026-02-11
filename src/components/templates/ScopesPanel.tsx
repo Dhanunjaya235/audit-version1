@@ -11,9 +11,10 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 interface ScopesPanelProps {
     auditArea: AuditArea;
     templateId: string;
+    saving?: boolean;
 }
 
-export const ScopesPanel: React.FC<ScopesPanelProps> = ({ auditArea, templateId }) => {
+export const ScopesPanel: React.FC<ScopesPanelProps> = ({ auditArea, templateId, saving }) => {
     const dispatch = useAppDispatch();
     const [scopeToDelete, setScopeToDelete] = useState<string | null>(null);
     const [newScopeName, setNewScopeName] = useState('');
@@ -56,6 +57,7 @@ export const ScopesPanel: React.FC<ScopesPanelProps> = ({ auditArea, templateId 
                     variant="primary"
                     onClick={() => setShowAddScope(true)}
                     className="flex items-center gap-2"
+                    disabled={saving}
                 >
                     <Plus size={18} />
                     Add Scope
@@ -112,6 +114,7 @@ export const ScopesPanel: React.FC<ScopesPanelProps> = ({ auditArea, templateId 
                                 templateId={templateId}
                                 areaId={auditArea.id}
                                 onDelete={() => setScopeToDelete(scope.id)}
+                                saving={saving}
                             />
                         ))}
                     </div>

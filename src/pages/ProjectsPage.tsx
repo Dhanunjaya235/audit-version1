@@ -13,7 +13,9 @@ import {
     X,
     Loader2,
     ExternalLink,
+    Settings,
 } from 'lucide-react';
+import { mockTemplates } from '../features/audits/api/mockData';
 
 // Mock data for projects
 interface ProjectAudit {
@@ -178,10 +180,14 @@ const mockUsers = [
 
 export const ProjectsPage: React.FC = () => {
     const navigate = useNavigate();
-    const [projects] = useState<ProjectDetail[]>(mockProjectsData);
+    const [projects, setProjects] = useState<ProjectDetail[]>(mockProjectsData);
     const [loading] = useState(false);
     const [statusFilter, setStatusFilter] = useState<string>('All');
     const [scheduleModal, setScheduleModal] = useState<{ open: boolean; project: ProjectDetail | null }>({
+        open: false,
+        project: null,
+    });
+    const [settingsModal, setSettingsModal] = useState<{ open: boolean; project: ProjectDetail | null }>({
         open: false,
         project: null,
     });
@@ -242,6 +248,11 @@ export const ProjectsPage: React.FC = () => {
 
     const handleViewAllAudits = (projectId: string) => {
         navigate(`/audits?project=${projectId}`);
+    };
+
+    const handleUpdateProject = (updatedProject: ProjectDetail) => {
+        setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+        setSettingsModal({ open: false, project: null });
     };
 
     if (loading) {
@@ -322,6 +333,7 @@ export const ProjectsPage: React.FC = () => {
                                 key={project.id}
                                 project={project}
                                 onScheduleAudit={() => handleScheduleAudit(project)}
+                                onOpenSettings={() => setSettingsModal({ open: true, project })}
                                 onViewAudit={handleViewAudit}
                                 onViewAllAudits={handleViewAllAudits}
                                 getStatusColor={getStatusColor}
@@ -345,6 +357,15 @@ export const ProjectsPage: React.FC = () => {
                     }}
                 />
             )}
+
+            {/* Project Settings Modal */}
+            {settingsModal.open && settingsModal.project && (
+                <ProjectSettingsModal
+                    project={settingsModal.project}
+                    onClose={() => setSettingsModal({ open: false, project: null })}
+                    onSave={handleUpdateProject}
+                />
+            )}
         </div>
     );
 };
@@ -355,6 +376,7 @@ interface ProjectCardProps {
     onScheduleAudit: () => void;
     onViewAudit: (auditId: string, status: string) => void;
     onViewAllAudits: (projectId: string) => void;
+    onOpenSettings: (project: ProjectDetail) => void;
     getStatusColor: (status: string) => string;
     getScoreColor: (score: number | null) => string;
     getAuditStatusColor: (status: string) => string;
@@ -366,6 +388,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     onScheduleAudit,
     onViewAudit,
     onViewAllAudits,
+    onOpenSettings,
     getStatusColor,
     getScoreColor,
     getAuditStatusColor,
@@ -381,13 +404,24 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <div className="p-6 border-b border-slate-100">
                 <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                            <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                                {project.code}
-                            </span>
-                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${getStatusColor(project.status)}`}>
-                                {project.status}
-                            </span>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                                    {project.code}
+                                </span>
+                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${getStatusColor(project.status)}`}>
+                                    {project.status}
+                                </span>
+                            </div>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenSettings(project);
+                                }}
+                                className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                            >
+                                <Settings size={16} />
+                            </button>
                         </div>
                         <h3 className="text-lg font-semibold text-slate-900 truncate">
                             {project.name}
@@ -699,6 +733,146 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+};
+
+
+// Project Settings Modal
+interface ProjectSettingsModalProps {
+    project: ProjectDetail;
+    onClose: () => void;
+    onSave: (project: ProjectDetail) => void;
+}
+
+const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
+    project,
+    onClose,
+    onSave,
+}) => {
+    const [loading, setLoading] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState(project.templateId);
+
+    const handleSave = async () => {
+        setLoading(true);
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const template = mockTemplates.find(t => t.id === selectedTemplate);
+
+        onSave({
+            ...project,
+            templateId: selectedTemplate,
+            templateName: template?.name || '',
+        });
+        setLoading(false);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+            <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 animate-scale-up">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-xl font-semibold text-slate-900">Project Settings</h2>
+                        <p className="text-sm text-slate-500 mt-1">{project.name}</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Assigned Audit Template
+                        </label>
+                        <div className="space-y-3">
+                            {mockTemplates.map(template => (
+                                <label
+                                    key={template.id}
+                                    className={`
+                                        flex items-start gap-4 p-4 rounded-xl border cursor-pointer
+                                        transition-all duration-200
+                                        ${selectedTemplate === template.id
+                                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                            : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                                        }
+                                    `}
+                                >
+                                    <div className="pt-1">
+                                        <input
+                                            type="radio"
+                                            name="template"
+                                            checked={selectedTemplate === template.id}
+                                            onChange={() => setSelectedTemplate(template.id)}
+                                            className="w-4 h-4 text-primary border-slate-300 focus:ring-primary"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className={`font-medium ${selectedTemplate === template.id ? 'text-primary-dark' : 'text-slate-900'
+                                                }`}>
+                                                {template.name}
+                                            </span>
+                                            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                                                v{template.version}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-slate-500 mb-2">
+                                            {template.description}
+                                        </p>
+                                        <div className="flex items-center gap-4 text-xs text-slate-400">
+                                            <span className="flex items-center gap-1">
+                                                <Building2 size={12} />
+                                                {template.areaCount} Areas
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <FileText size={12} />
+                                                {template.questionCount} Questions
+                                            </span>
+                                        </div>
+                                    </div>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                        <button
+                            onClick={onClose}
+                            className="px-5 py-2.5 text-slate-700 font-medium bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={loading || selectedTemplate === project.templateId}
+                            className="
+                                flex items-center gap-2 px-5 py-2.5 font-medium rounded-lg
+                                bg-primary text-white
+                                hover:bg-primary-dark transition-all
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                            "
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <ClipboardCheck size={16} />
+                                    Save Changes
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -18,13 +18,15 @@ interface ScopeAccordionProps {
     templateId: string;
     areaId: string;
     onDelete: () => void;
+    saving?: boolean;
 }
 
 export const ScopeAccordion: React.FC<ScopeAccordionProps> = ({
     scope,
     templateId,
     areaId,
-    onDelete
+    onDelete,
+    saving
 }) => {
     const dispatch = useAppDispatch();
     const expandedScopeIds = useAppSelector(state => state.scopes.expandedScopeIds);
@@ -239,7 +241,8 @@ export const ScopeAccordion: React.FC<ScopeAccordionProps> = ({
 
                                                 <button
                                                     onClick={() => handleAddOption(question.id)}
-                                                    className="w-full mt-3 px-3 py-2 border-2 border-dashed border-indigo-200 rounded-lg text-indigo-600 hover:border-indigo-400 hover:bg-white transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                                                    disabled={saving}
+                                                    className={`w-full mt-3 px-3 py-2 border-2 border-dashed border-indigo-200 rounded-lg text-indigo-600 hover:border-indigo-400 hover:bg-white transition-all flex items-center justify-center gap-2 text-sm font-medium ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                 >
                                                     <Plus size={16} />
                                                     Add Option
@@ -284,7 +287,8 @@ export const ScopeAccordion: React.FC<ScopeAccordionProps> = ({
                     {/* Add Question Button */}
                     <button
                         onClick={handleAddQuestion}
-                        className="w-full mt-4 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary hover:bg-primary hover:bg-opacity-5 transition-all flex items-center justify-center gap-2"
+                        disabled={saving}
+                        className={`w-full mt-4 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary hover:bg-primary hover:bg-opacity-5 transition-all flex items-center justify-center gap-2 ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <Plus size={18} />
                         Add Question

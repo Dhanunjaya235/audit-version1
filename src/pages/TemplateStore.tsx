@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, FileText } from 'lucide-react';
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { fetchTemplates } from "@/store/slices/templatesSlice";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { CreateTemplateModal } from "@/components/templates/CreateTemplateModal";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +10,14 @@ import type { Template } from "@/types/audit.types";
 
 export const TemplateStore: React.FC = () => {
     const templates = useAppSelector(state => state.templates.templates);
+    const loading = useAppSelector(state => state.templates.loading);
+    const error = useAppSelector(state => state.templates.error);
+    const dispatch = useAppDispatch();
     const [showCreateModal, setShowCreateModal] = useState(false);
+
+    useEffect(() => {
+        dispatch(fetchTemplates());
+    }, [dispatch]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -33,7 +41,19 @@ export const TemplateStore: React.FC = () => {
                 </div>
 
                 {/* Templates Grid */}
-                {templates.length === 0 ? (
+                {loading && templates.length === 0 ? (
+                    <div className="flex items-center justify-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    </div>
+                ) : error ? (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                        <p className="text-red-600 mb-2">Failed to load templates</p>
+                        <p className="text-sm text-red-500 mb-4">{error}</p>
+                        <Button variant="secondary" onClick={() => dispatch(fetchTemplates())}>
+                            Retry
+                        </Button>
+                    </div>
+                ) : templates.length === 0 ? (
                     <EmptyState
                         icon={FileText}
                         title="No Templates Yet"

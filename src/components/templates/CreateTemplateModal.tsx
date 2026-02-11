@@ -3,8 +3,9 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { FileText, Copy } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { createTemplate } from '@/store/slices/templatesSlice';
+import { initDraftTemplate, createDraftFromExisting } from '@/store/slices/templatesSlice';
 import { useNavigate } from 'react-router-dom';
+import { generateId } from '@/utils/calculations';
 
 interface CreateTemplateModalProps {
     isOpen: boolean;
@@ -15,6 +16,7 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const templates = useAppSelector(state => state.templates.templates);
+    const loading = useAppSelector(state => state.templates.loading);
     const [step, setStep] = useState<'choose' | 'name' | 'select'>('choose');
     const [templateName, setTemplateName] = useState('');
     const [selectedBaseId, setSelectedBaseId] = useState<string>('');
@@ -34,37 +36,40 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen
         setStep('select');
     };
 
-    const handleCreate = () => {
-        if (!templateName.trim()) return;
-
-        if (step === 'name') {
-            // Create from scratch
-            dispatch(createTemplate({ name: templateName.trim() }));
-            handleClose();
-            // Navigate to the new template (we'll get the actual ID from Redux state)
-            setTimeout(() => {
-                const latestTemplate = templates[templates.length - 1];
-                if (latestTemplate) {
-                    navigate(`/templates/${latestTemplate.id}`);
-                }
-            }, 100);
-        } else if (step === 'select' && selectedBaseId) {
-            // Create from existing
-            dispatch(createTemplate({ name: templateName.trim(), baseTemplateId: selectedBaseId }));
-            handleClose();
-            setTimeout(() => {
-                const latestTemplate = templates[templates.length - 1];
-                if (latestTemplate) {
-                    navigate(`/templates/${latestTemplate.id}`);
-                }
-            }, 100);
-        }
-    };
-
     const handleTemplateSelect = (templateId: string) => {
         setSelectedBaseId(templateId);
         setTemplateName('');
         setStep('name');
+    };
+
+    const handleCreate = () => {
+        if (!templateName.trim()) return;
+
+        // Generate ID here to ensure we know where to navigate
+        const newTemplateId = generateId();
+
+        if (step === 'name') {
+            // Synchronous dispatch for scratch
+            dispatch(initDraftTemplate({
+                name: templateName.trim(),
+                id: newTemplateId
+            }));
+            handleClose();
+            navigate(`/templates/${newTemplateId}`);
+        } else if (step === 'select' && selectedBaseId) {
+            // Async dispatch for existing (fetch + clone)
+            dispatch(createDraftFromExisting({
+                name: templateName.trim(),
+                baseTemplateId: selectedBaseId,
+                newId: newTemplateId
+            })).unwrap().then(() => {
+                handleClose();
+                navigate(`/templates/${newTemplateId}`);
+            }).catch((err) => {
+                console.error("Failed to create draft from existing:", err);
+                // Optionally show error in UI
+            });
+        }
     };
 
     return (
@@ -145,15 +150,15 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen
                     </div>
 
                     <div className="flex gap-3 justify-end mt-6">
-                        <Button variant="secondary" onClick={handleClose}>
+                        <Button variant="secondary" onClick={handleClose} disabled={loading}>
                             Cancel
                         </Button>
                         <Button
                             variant="primary"
                             onClick={handleCreate}
-                            disabled={!templateName.trim()}
+                            disabled={!templateName.trim() || loading}
                         >
-                            Create Template
+                            {(loading && selectedBaseId) ? 'Cloning...' : 'Create Template'}
                         </Button>
                     </div>
                 </div>
